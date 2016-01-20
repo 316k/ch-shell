@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <string.h>
 
@@ -24,7 +25,13 @@ int main(void)
 			exit(-1);
 
 		while ((token = strsep(&string, " ")) != NULL) {
-			printf("%s\n", token);
+			pid_t pid = fork();
+
+			if(pid == 0) {
+				execlp("ls", "child-name", NULL);
+			} else {
+				wait(NULL);
+			}
 		}
 
 		free(tofree);
