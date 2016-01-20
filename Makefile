@@ -3,7 +3,7 @@
 # Attention, dans les fichiers Make, les TAB ont une signification très
 # spécifique.  Ne pas remplacer des TABs par des espaces (ou l'inverse).
 
-CFLAGS=-Wall
+CFLAGS=-Wall -g
 
 CC=cc
 LD=cc
