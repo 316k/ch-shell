@@ -11,24 +11,41 @@
 int main(void)
 {
 	while(1) {
-		fprintf(stdout, "%% ");
+		fprintf(stdout, "!!!%s: %% ", get_current_dir_name());
 
-		char *token, *string, *tofree;
+		char *cmd, *token, *string, *tofree;
 
 		char input[INPUT_LIMIT];
 
+		// Check the first char of input for EOF
+		char eof = getc(stdin);
+
+		if(eof == EOF)
+			break;
+
+		ungetc(eof, stdin);
+
+		// input
 		fgets(input, INPUT_LIMIT, stdin);
+
+		// cleans trailing \n
+		input[strlen(input) - 1] = '\0';
 
 		tofree = string = strdup(input);
 
 		if (string == NULL)
 			exit(-1);
 
-		while ((token = strsep(&string, " ")) != NULL) {
+		cmd = strsep(&string, " ");
+
+		if(strcmp(cmd, "cd") == 0) {
+			chdir(string);
+		} else {
 			pid_t pid = fork();
 
 			if(pid == 0) {
-				execlp("ls", "child-name", NULL);
+				printf("%s", cmd);
+				execlp(cmd, cmd, NULL);
 			} else {
 				wait(NULL);
 			}
