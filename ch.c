@@ -11,7 +11,7 @@
 int main(void)
 {
 	while(1) {
-		fprintf(stdout, "!!!%s: %% ", get_current_dir_name());
+		fprintf(stdout, "$%s: %% ", get_current_dir_name());
 
 		char *cmd, *token, *string, *tofree;
 
@@ -44,8 +44,9 @@ int main(void)
 			pid_t pid = fork();
 
 			if(pid == 0) {
-				printf("%s", cmd);
-				execlp(cmd, cmd, NULL);
+				execlp(cmd, cmd, string, (char*) NULL);
+				printf("%s: no such file or directory exception procedure arguments\n", cmd);
+				exit(-1);
 			} else {
 				wait(NULL);
 			}
