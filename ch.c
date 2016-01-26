@@ -29,7 +29,7 @@ int count_dong() {
 	return count;
 }
 
-char count_args(char *str)
+int count_args(char *str)
 {
 	if(str == NULL) {
 		return 0;
@@ -93,7 +93,7 @@ int main(void)
 		do {
 			cmd = strsep(&string, " ");
 
-			char argc = count_args(string);
+			int argc = count_args(string);
 			char** argv = malloc(sizeof(char*) * (argc + 2));
 			
 			please_dont_segfault(argv);
