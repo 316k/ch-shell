@@ -25,6 +25,9 @@ ch: ch.o
 clean:
 	$(RM) *.o ch *.aux *.log *.pdf
 
+install:
+	cp ./ch ~/bin/ch
+
 .SUFFIXES: .tex .pdf
 
 # Règle simpliste pour générer le PDF à partir du source LaTeX.
