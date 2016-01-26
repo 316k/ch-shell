@@ -1,5 +1,7 @@
 /* ch.c --- Un shell pour les hélvètes.  */
 
+#define _GNU_SOURCE 1
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
@@ -11,27 +13,31 @@
 #include <dirent.h>
 
 #define INPUT_LIMIT 128
-#define please_dont_segfault(segfaulty_stuff)							\
-    if(segfaulty_stuff == NULL) {										\
+#define please_dont_segfault(segfaulty_stuff)							    \
+    if(segfaulty_stuff == NULL) {										    \
         printf("FIN DE LA MÉMOIRE. FUYEZ PAUVRES FOUS !! (%s, ligne %d)\n", \
-               __func__, __LINE__);										\
-        exit(-1);														\
+               __func__, __LINE__);										    \
+        exit(-1);														    \
     }
 
 int count_dong() {
 	DIR *dir = opendir(".");
 	struct dirent *ent = NULL;
-	int count = -2;
+	int count = 0;
 	please_dont_segfault(dir);
 
 	while((ent = readdir(dir)) != NULL) {
-		count++;
+		if(ent->d_name[0] != '.')
+			count++;
 	}
 	closedir(dir);
 
 	return count;
 }
 
+/**
+ * Counts the number of required
+ */
 int count_args(char *str)
 {
 	if(str == NULL) {
@@ -47,7 +53,8 @@ int count_args(char *str)
 		if(str[i] == ' ' && last_char != ' ')
 			args++;
 
-		if(str[i] == '*') {
+		if(str[i] == '*' && last_char == ' '
+		   && (str[i + 1] == '\0' || str[i + 1] == ' ')) {
 			args += count_dong() - 1;
 		}
 
@@ -64,7 +71,12 @@ int main(void)
 {
 	int i;
 	while (1) {
-		printf("$%s: %% ", get_current_dir_name());
+
+		// Fancy prompt
+		char* dirname = get_current_dir_name();
+		printf("%s@%s:%s%% ", getenv("LOGNAME"), getenv("HOSTNAME"), dirname);
+
+		free(dirname);
 
 		// Deep magic starts here
 		int in = 0, out = 1;
@@ -93,20 +105,24 @@ int main(void)
 
 		int children = 0;
 
+		// Parse command line and create all required subprocesses
 		do {
 			cmd = strsep(&string, " ");
 
 			int argc = count_args(string);
+
 			char** argv = malloc(sizeof(char*) * (argc + 2));
-			
+
 			please_dont_segfault(argv);
-			
+
 			char* token = NULL;
 			int i = 0;
-			
+
 			argv[0] = cmd;
 			for(i = 1; i <= argc; i++) {
+
 				do {
+					// Consume redondant spaces
 					token = strsep(&string, " ");
 				} while(token[0] == '\0');
 
@@ -118,17 +134,19 @@ int main(void)
 					please_dont_segfault(dir);
 
 					while((dong = readdir(dir)) != NULL) {
-						if(strcmp(dong->d_name, ".") != 0 &&
-						   strcmp(dong->d_name, "..") != 0) {
+						if(dong->d_name[0] != '.') {
 							argv[i] = dong->d_name;
 							i++;
 						}
 					}
+					i--;
+
 					closedir(dir);
 				} else {
 					argv[i] = token;
 				}
 			}
+
 			argv[argc + 1] = (char*) NULL;
 
 			// Empty statements
@@ -143,7 +161,7 @@ int main(void)
 				} else {
 					chdir(argv[1]);
 				}
-
+				free(argv);
 				goto free_vars;
 			}
 
@@ -158,16 +176,26 @@ int main(void)
 			while(string != NULL && (string[0] == '<' || string[0] == '>')) {
 				char redirect_input = string[0] == '<';
 
-				strsep(&string, " "); // consome le symbole
+				token = strsep(&string, " ");
 
 				// file name
 				char* filename = strsep(&string, " ");
 
 				if(redirect_input) {
+					if(access(filename, F_OK) == -1) {
+						// If input file doesn't exist
+						printf("%s: no such file or directory ", filename);
+						printf("exception procedure arguments (EDONTCARE)\n");
+						goto free_vars;
+					}
+
 					in = open(filename, O_RDONLY);
 				} else {
 					out_to_file = 1;
-					out = open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+					/* If output file doesn't exist, create it with the
+					   right permissions */
+					out = open(filename, O_WRONLY | O_CREAT | O_TRUNC,
+							   S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
 				}
 			}
 
@@ -183,35 +211,36 @@ int main(void)
 					dup2(out, 1);
 					close(out);
 				}
-				
+
 				execvp(cmd, argv);
 				printf("%s: no such file or directory ", cmd);
 				printf("exception procedure arguments (EWONTFIX)\n");
 				exit(-1);
 			}
-			
+
 			close(out);
-			
+
 			in = pipefd[0];
 
-			// Next item should be a pipe... destroy it !
 			if(string != NULL) {
+				// Next item should be a pipe... destroy it !
 				strsep(&string, " ");
 			}
-			
+
 			free(argv);
 			children++;
-			
+
 		} while(string != NULL);
-		
+
+		// Main process waits for all children to terminate
 		for(i = 0; i < children; i++) {
 			wait(NULL);
 		}
-		
+
 	free_vars:
 		free(tofree);
 	}
-	
+
 	printf("Bye!\n");
 	exit(0);
 }
