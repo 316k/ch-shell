@@ -13,13 +13,16 @@
 #include <dirent.h>
 
 #define INPUT_LIMIT 128
-#define please_dont_segfault(segfaulty_stuff)							    \
-    if(segfaulty_stuff == NULL) {										    \
-        printf("FIN DE LA MÉMOIRE. FUYEZ PAUVRES FOUS !! (%s, ligne %d)\n", \
-               __func__, __LINE__);										    \
-        exit(-1);														    \
+#define please_dont_segfault(segfaulty_stuff)							\
+    if(segfaulty_stuff == NULL) {										\
+        printf("NullPointerExceptionArgumentProcedure (EASKMYBOSS)\n",	\
+               __func__, __LINE__);										\
+        exit(-1);														\
     }
 
+/**
+ * Count files and subdirectories in directory
+ */
 int count_dong() {
 	DIR *dir = opendir(".");
 	struct dirent *ent = NULL;
@@ -36,7 +39,7 @@ int count_dong() {
 }
 
 /**
- * Counts the number of required
+ * Counts the number of arguments in a command
  */
 int count_args(char *str)
 {
@@ -48,11 +51,13 @@ int count_args(char *str)
 	int args = 1;
 	char last_char = ' ';
 
+	// Break at end of string or i/o redirect
 	while (str[i] != '\0' && str[i] != '|' && str[i] != '<' && str[i] != '>') {
 
 		if(str[i] == ' ' && last_char != ' ')
 			args++;
 
+		// Expand dong
 		if(str[i] == '*' && last_char == ' '
 		   && (str[i + 1] == '\0' || str[i + 1] == ' ')) {
 			args += count_dong() - 1;
@@ -72,10 +77,9 @@ int main(void)
 	int i;
 	while (1) {
 
-		// Fancy prompt
+		// Fancy prompt : 'user@host:/current/directory%'
 		char* dirname = get_current_dir_name();
 		printf("%s@%s:%s%% ", getenv("LOGNAME"), getenv("HOSTNAME"), dirname);
-
 		free(dirname);
 
 		// Deep magic starts here
@@ -105,8 +109,9 @@ int main(void)
 
 		int children = 0;
 
-		// Parse command line and create all required subprocesses
 		do {
+			// Parse command line and create all required subprocesses
+
 			cmd = strsep(&string, " ");
 
 			int argc = count_args(string);
@@ -129,9 +134,10 @@ int main(void)
 				if(strcmp(token, "*") == 0) {
 					// expand dong
 					DIR *dir = opendir(".");
-					struct dirent *dong = NULL;
 
 					please_dont_segfault(dir);
+
+					struct dirent *dong = NULL;
 
 					while((dong = readdir(dir)) != NULL) {
 						if(dong->d_name[0] != '.') {
@@ -149,7 +155,7 @@ int main(void)
 
 			argv[argc + 1] = (char*) NULL;
 
-			// Empty statements
+			// Ignore empty statements
 			if (strlen(cmd) == 0) {
 				goto free_vars;
 			}
@@ -178,7 +184,6 @@ int main(void)
 
 				token = strsep(&string, " ");
 
-				// file name
 				char* filename = strsep(&string, " ");
 
 				if(redirect_input) {
@@ -230,6 +235,7 @@ int main(void)
 			free(argv);
 			children++;
 
+			// repeat until all processes have been forked
 		} while(string != NULL);
 
 		// Main process waits for all children to terminate
