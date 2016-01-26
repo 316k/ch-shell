@@ -3,16 +3,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
 #include <dirent.h>
 
 #define INPUT_LIMIT 128
-#define please_dont_segfault(segfaulty_stuff)							    \
-    if(segfaulty_stuff == NULL) {										    \
+#define please_dont_segfault(segfaulty_stuff)							\
+    if(segfaulty_stuff == NULL) {										\
         printf("FIN DE LA MÉMOIRE. FUYEZ PAUVRES FOUS !! (%s, ligne %d)\n", \
-               __func__, __LINE__);										    \
-        exit(-1);														    \
+               __func__, __LINE__);										\
+        exit(-1);														\
     }
 
 int count_dong() {
@@ -143,22 +146,40 @@ int main(void)
 
 				goto free_vars;
 			}
-			
+
 			int pipefd[2];
-			
+
 			pipe(pipefd);
 
 			out = pipefd[1];
-				
+
+			char out_to_file = 0;
+
+			while(string != NULL && (string[0] == '<' || string[0] == '>')) {
+				char redirect_input = string[0] == '<';
+
+				strsep(&string, " "); // consome le symbole
+
+				// file name
+				char* filename = strsep(&string, " ");
+
+				if(redirect_input) {
+					in = open(filename, O_RDONLY);
+				} else {
+					out_to_file = 1;
+					out = open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+				}
+			}
+
 			if(fork() == 0) {
-				
+
 				// Deep magic continues here
 				if(in != 0) {
 					dup2(in, 0);
 					close(in);
 				}
-				
-				if(string != NULL && out != 1) {
+
+				if((string != NULL && out != 1) || out_to_file) {
 					dup2(out, 1);
 					close(out);
 				}
@@ -173,6 +194,7 @@ int main(void)
 			
 			in = pipefd[0];
 
+			// Next item should be a pipe... destroy it !
 			if(string != NULL) {
 				strsep(&string, " ");
 			}
