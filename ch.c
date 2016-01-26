@@ -14,7 +14,7 @@
         exit(-1);														    \
     }
 
-int count_args(char *str)
+char count_args(char *str)
 {
 	if(str == NULL) {
 		return 0;
@@ -37,11 +37,14 @@ int count_args(char *str)
 
 int main(void)
 {
-	int i = 0;
+	int i;
 	while (1) {
 		printf("$%s: %% ", get_current_dir_name());
 
-		char *cmd, *token, *string, *tofree;
+		// Deep magic starts here
+		int in = 0, out = 1;
+
+		char *cmd, *string, *tofree;
 
 		char input[INPUT_LIMIT];
 
@@ -63,42 +66,88 @@ int main(void)
 
 		please_dont_segfault(string);
 
-		cmd = strsep(&string, " ");
+		int children = 0;
 
-		int argc = count_args(string);
-		char** argv = malloc(sizeof(char*) * (argc + 2));
+		do {
+			cmd = strsep(&string, " ");
 
-		please_dont_segfault(argv);
+			char argc = count_args(string);
+			char** argv = malloc(sizeof(char*) * (argc + 2));
+			
+			please_dont_segfault(argv);
+			
+			char* token = NULL;
+			int i = 0;
+			
+			argv[0] = cmd;
+			for(i = 1; i <= argc; i++) {
+				do {
+					token = strsep(&string, " ");
+				} while(token[0] == '\0');
+				
+				argv[i] = token;
+			}
+			argv[argc + 1] = (char*) NULL;
 
-		argv[0] = cmd;
-		for(i = 1; i <= argc; i++) {
-			do {
-				token = strsep(&string, " ");
-			} while(token[0] == '\0');
+			// Empty statements
+			if (strlen(cmd) == 0) {
+			}
 
-			argv[i] = token;
-		}
-		argv[argc + 1] = (char*) NULL;
+			// Special case for cd
+			if (strcmp(cmd, "cd") == 0) {
+				if(argv[1] == NULL) {
+					chdir(getenv("HOME"));
+				} else {
+					chdir(argv[1]);
+				}
+				continue;
+			}
+			
+			int pipefd[2];
+			
+			pipe(pipefd);
 
-		if (strcmp(cmd, "cd") == 0) {
-			chdir(argv[1]);
-		} else {
-			pid_t pid = fork();
-
-			if (pid == 0) {
+			out = pipefd[1];
+				
+			if(fork() == 0) {
+				
+				// Deep magic continues here
+				if(in != 0) {
+					dup2(in, 0);
+					close(in);
+				}
+				
+				if(string != NULL && out != 1) {
+					dup2(out, 1);
+					close(out);
+				}
+				
 				execvp(cmd, argv);
 				printf("%s: no such file or directory ", cmd);
 				printf("exception procedure arguments (EWONTFIX)\n");
 				exit(-1);
-			} else {
-				wait(NULL);
 			}
+			
+			close(out);
+			
+			in = pipefd[0];
+
+			if(string != NULL) {
+				strsep(&string, " ");
+			}
+			
+			free(argv);
+			children++;
+			
+		} while(string != NULL);
+		
+		for(i = 0; i < children; i++) {
+			wait(NULL);
 		}
-
+		
 		free(tofree);
-		free(argv);
 	}
-
+	
 	printf("Bye!\n");
 	exit(0);
 }
