@@ -91,6 +91,7 @@ int main(void)
 
 			// Empty statements
 			if (strlen(cmd) == 0) {
+				goto free_vars;
 			}
 
 			// Special case for cd
@@ -100,7 +101,7 @@ int main(void)
 				} else {
 					chdir(argv[1]);
 				}
-				continue;
+				goto free_vars;
 			}
 			
 			int pipefd[2];
@@ -145,6 +146,7 @@ int main(void)
 			wait(NULL);
 		}
 		
+	free_vars:
 		free(tofree);
 	}
 	
