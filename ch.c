@@ -15,8 +15,7 @@
 #define INPUT_LIMIT 128
 #define please_dont_segfault(segfaulty_stuff)							\
     if(segfaulty_stuff == NULL) {										\
-        printf("NullPointerExceptionArgumentProcedure (EASKMYBOSS)\n",	\
-               __func__, __LINE__);										\
+        printf("NullPointerExceptionArgumentProcedure (EASKMYBOSS)\n");	\
         exit(-1);														\
     }
 
