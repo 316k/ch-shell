@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <string.h>
+#include <dirent.h>
 
 #define INPUT_LIMIT 128
 #define please_dont_segfault(segfaulty_stuff)							    \
@@ -13,6 +14,20 @@
                __func__, __LINE__);										    \
         exit(-1);														    \
     }
+
+int count_dong() {
+	DIR *dir = opendir(".");
+	struct dirent *ent = NULL;
+	int count = -2;
+	please_dont_segfault(dir);
+
+	while((ent = readdir(dir)) != NULL) {
+		count++;
+	}
+	closedir(dir);
+
+	return count;
+}
 
 char count_args(char *str)
 {
@@ -25,7 +40,14 @@ char count_args(char *str)
 	char last_char = ' ';
 
 	while (str[i] != '\0' && str[i] != '|' && str[i] != '<' && str[i] != '>') {
-		args += str[i] == ' ' && last_char != ' ';
+
+		if(str[i] == ' ' && last_char != ' ')
+			args++;
+
+		if(str[i] == '*') {
+			args += count_dong() - 1;
+		}
+
 		last_char = str[i];
 		i++;
 	}
@@ -84,8 +106,25 @@ int main(void)
 				do {
 					token = strsep(&string, " ");
 				} while(token[0] == '\0');
-				
-				argv[i] = token;
+
+				if(strcmp(token, "*") == 0) {
+					// expand dong
+					DIR *dir = opendir(".");
+					struct dirent *dong = NULL;
+
+					please_dont_segfault(dir);
+
+					while((dong = readdir(dir)) != NULL) {
+						if(strcmp(dong->d_name, ".") != 0 &&
+						   strcmp(dong->d_name, "..") != 0) {
+							argv[i] = dong->d_name;
+							i++;
+						}
+					}
+					closedir(dir);
+				} else {
+					argv[i] = token;
+				}
 			}
 			argv[argc + 1] = (char*) NULL;
 
@@ -101,6 +140,7 @@ int main(void)
 				} else {
 					chdir(argv[1]);
 				}
+
 				goto free_vars;
 			}
 			
