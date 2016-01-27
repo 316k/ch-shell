@@ -3,12 +3,58 @@
 \usepackage[utf8]{inputenc}
 
 \title{Travail pratique \#1 - IFT-2245}
-\author{Moi et L'autre}
+\author{Nicolas Hurtubise et Guillaume Riou}
 
 \begin{document}
 
 \maketitle
 
-%% ¡¡ REMPLIR ICI !!
+\section{Intro}
+
+Le shell ch constitue un shell de base minimaliste implémentant :
+
+\begin{enumerate}
+\item L'appel de programmes exécutables (présents dans le PATH ou via un chemin absolu ou relatif) avec arguments
+\item L'expansion de `*` dans les arguments par la liste des fichiers et dossiers présents dans le dossier courrant
+\item Le changement de dossier via la commande ``built-in'' cd
+\item La redirection de flux d'entrée et de sortie vers d'autres programmes (des ``pipes'') ainsi que vers des fichiers (via \textless et \textgreater)
+\end{enumerate}
+
+\section{Stratégie d'implantation}
+
+En début de projet, nous avons considéré apprendre de nouveaux outils d'analyse sémantique et lexicale tels que \texttt{yacc} et \texttt{lex}, suggestion faite par le merveilleux et talentueux démonstrateur, Alexandre St-Louis-Fortier. Étant données les contraintes de temps et le niveau de complexité relativement restreint du projet, nous avons plutôt opté pour des fonctions de la librairie string.h, plus simples d'utilisation pour des néophytes.
+
+
+Notre stratégie est de séparer les tokens en entré sur les espaces (caractère ASCII 32) et de les accumuler jusqu'à obtenir une redirection de flux ('\textless', '\textgreater' ou '\textbar') ou le caractère de fin de chaîne '\\0'. Le premier token est considéré comme le nom de la commande, les suivants comme les arguments qui lui seront passés.
+
+
+Chaque commande entrée génère utilise la sortie de la commande précédente (ou \texttt{stdin} par défaut) en guise d'entrée et envoie sa sortie vers la commande suivante (ou vers \texttt{stdout} par défaut). Il est possible de donner à une commande un fichier pour \texttt{stdin} ou \texttt{stdout}, respectivement grâce aux opérateurs \textless et \textgreater.
+
+\section{Difficulté rencontrées, limitations et perspectives futures}
+
+\#define INPUT\_LIMIT 128
+Pas d'escape d'arguments "
+Limitations sur les espaces multiples autour des |, > et <
+Expand seulement
+
+
+
+\section{Outils utilisés}
+
+Plusieurs outils nous ont été utiles au cours de ce
+
+\begin{enumerate}
+\item \texttt{make} et \texttt{gcc} pour la compilation du code et son automatisation
+\item \texttt{valgrind} pour l'élimination des fuites de mémoire
+\item \texttt{git} pour le partage aisé de code source
+\item \LaTeX pour le formattage de ce rapport
+\item sans oublier l'excellent éditeur de texte \texttt{Emacs}, pour la coloration syntaxique, l'édition de code, l'indentation automatique et le divertissement lorsque le moral était bas\footnote{On peut difficilement s'ennuyer avec zone-mode, life-mode, pong, tetris, ... et doctor-mode a su nous prêter une oreille d'une grande aide dans les moments difficiles.}
+\end{enumerate}
+
+\section{Conclusion}
+
+L'implantation de ce shell nous a permi d'en apprendre plus sur les bases de la programmation en C sous Unix, notamment sur l'utilisation des pipes et des redirections de flux d'entrée/sortie.
+
+L'une des plus grandes révélations a certainement été le côté omniprésent des fichiers dans ce genre de systèmes. En effet, en définissant \texttt{stdin} et \texttt{stdout} de la même façon que les fichiers réguliers, des problèmes tels que la redirection de flux depuis/vers un fichier sont grandement réduits.
 
 \end{document}
