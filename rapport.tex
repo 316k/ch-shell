@@ -31,7 +31,6 @@ Notre stratégie est de séparer les tokens en entré sur les espaces (caractèr
 
 Au début de l'implantation, nous avons opté pour l'utilisation de la fonction strsep qui est en quelque sorte un remplacement pour strtok. En effet, cette fonction permet de gérer plus facilement les délimiteurs multiples.
 
-
 Chaque commande entrée génère utilise la sortie de la commande précédente (ou \texttt{stdin} par défaut) en guise d'entrée et envoie sa sortie vers la commande suivante (ou vers \texttt{stdout} par défaut). Il est possible de donner à une commande un fichier pour \texttt{stdin} ou \texttt{stdout}, respectivement grâce aux opérateurs \textless et \textgreater.
 
 \section{Difficulté rencontrées, limitations et perspectives futures}
@@ -39,14 +38,13 @@ Chaque commande entrée génère utilise la sortie de la commande précédente (
 
 Une des plus grande difficulté que nous avons du gérer durant la réalisation de ce projet est celle de concevoir le flot d'un programme se divisant plusieurs fois. En effet, concevoir un programme qui exécute simultanément plusieurs branches de code est un défi que nous n'avions jamais encore relevés. 
 
-Vu que notre programme a été développé sur un intervalle de temps limité dans le cadre d'un cours, il est certain qu'il possède des limitations qu'un shell mature n'a pas. Vu la méthode utilisée pour parser l'entrée, le nombre maximum de caractères dans une commande est 128. Après ce nombre, le programme considère le reste comme une autre commande séparée. Notre opérateur '*' ne peut être utilisé que seul pour faire la liste de tous les fichiers contenus dans le dossier courrant. Notre gestion des délimiteurs multiple pourrait aussi être améliorée : les délimiteurs multiples autour des arguments d'une commande sont supportés mais ceux autours d'un opérateurs de redirection ne le sont pas.
+Vu que notre programme a été développé sur un intervalle de temps limité dans le cadre d'un cours, il est certain qu'il possède des limitations qu'un shell mature n'a pas. La méthode d'analyse de l'entrée utilisateur que nous avons utilisés constite une de ces limitations. Le nombre maximum de caractères dans une commande est 128 (une constante dans le code qu'il est possible de changer par une recompilation), après ce nombre, le programme considère le reste comme une autre commande séparée.
 
+Notre opérateur '*' ne peut être utilisé que seul pour faire la liste de tous les fichiers contenus dans le dossier courrant. Notre gestion des délimiteurs multiple pourrait aussi être améliorée : les délimiteurs multiples autour des arguments d'une commande sont supportés mais ceux autours d'un opérateurs de redirection ne le sont pas.
 
+Une autre limitation est l'impossibilité d'échapper des charactères dans un argument. Il est ainsi impossible de faire référence à des dossiers dont le nom comprend des espaces.
 
-\#define INPUT\_LIMIT 128
-Pas d'escape d'arguments "
-Limitations sur les espaces multiples autour des |, > et <
-Expand seulement
+Il serait bien entendu intéressant de rendre notre shell plus complet en le modifiant pour ajouter des structures de contrôles comme des conditions, des boucles et des opérations booléennes telles que \&\& ou \textbar\textbar se basant sur les valeurs de retour des processus. Il serait aussi intéressant d'y ajouter certaines fonctionnalités pratique de bash telles que la possibilité de définir des alias ou de pouvoir exécuter un fichier de configuration (.chrc) au démarage du shell.
 
 \newpage
 
