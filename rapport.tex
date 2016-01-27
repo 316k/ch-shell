@@ -29,10 +29,19 @@ En début de projet, nous avons considéré apprendre de nouveaux outils d'analy
 
 Notre stratégie est de séparer les tokens en entré sur les espaces (caractère ASCII 32) et de les accumuler jusqu'à obtenir une redirection de flux ('\textless', '\textgreater' ou '\textbar') ou le caractère de fin de chaîne '\\0'. Le premier token est considéré comme le nom de la commande, les suivants comme les arguments qui lui seront passés.
 
+Au début de l'implantation, nous avons opté pour l'utilisation de la fonction strsep qui est en quelque sorte un remplacement pour strtok. En effet, cette fonction permet de gérer plus facilement les délimiteurs multiples.
+
 
 Chaque commande entrée génère utilise la sortie de la commande précédente (ou \texttt{stdin} par défaut) en guise d'entrée et envoie sa sortie vers la commande suivante (ou vers \texttt{stdout} par défaut). Il est possible de donner à une commande un fichier pour \texttt{stdin} ou \texttt{stdout}, respectivement grâce aux opérateurs \textless et \textgreater.
 
 \section{Difficulté rencontrées, limitations et perspectives futures}
+Étant donné que le programme que nous avons écrit est en C, nous avons rencontrés des difficultés sous la forme de bugs cryptiques et difficiles à tracer. C'est dans ces situations que nous avons appris à apprécier Valgrind qui donne souvent un bien meilleur apperçu de la situation que la gestion d'erreur rudimentaire de C. 
+
+Une des plus grande difficulté que nous avons du gérer durant la réalisation de ce projet est celle de concevoir le flot d'un programme se divisant plusieurs fois. En effet, concevoir un programme qui exécute simultanément plusieurs branches de code est un défi que nous n'avions jamais encore relevés. 
+
+Vu que notre programme a été développé sur un intervalle de temps limité dans le cadre d'un cours, il est certain qu'il possède des limitations qu'un shell mature n'a pas. Vu la méthode utilisée pour parser l'entrée, le nombre maximum de caractères dans une commande est 128. Après ce nombre, le programme considère le reste comme une autre commande séparée. Notre opérateur '*' ne peut être utilisé que seul pour faire la liste de tous les fichiers contenus dans le dossier courrant. Notre gestion des délimiteurs multiple pourrait aussi être améliorée : les délimiteurs multiples autour des arguments d'une commande sont supportés mais ceux autours d'un opérateurs de redirection ne le sont pas.
+
+
 
 \#define INPUT\_LIMIT 128
 Pas d'escape d'arguments "
@@ -43,7 +52,7 @@ Expand seulement
 
 \section{Outils utilisés}
 
-Plusieurs outils nous ont été utiles au cours de ce
+Plusieurs outils nous ont été utiles au cours de la réalisation de ce projet : 
 
 \begin{enumerate}
 \item \texttt{make} et \texttt{gcc} pour la compilation du code et son automatisation
